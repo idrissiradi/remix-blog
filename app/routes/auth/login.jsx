@@ -2,7 +2,7 @@ import { json, redirect } from '@remix-run/node';
 import { useActionData } from '@remix-run/react';
 
 import { db } from '../../utils/db.server';
-import { login } from '../../utils/session.server';
+import { login, createUserSession } from '../../utils/session.server';
 
 function validateUsername(username) {
 	if (typeof username !== 'string' || username.length < 3) {
@@ -38,14 +38,19 @@ export const action = async ({ request }) => {
 	}
 
 	switch (loginType) {
-		case 'login':
+		case 'login': {
+			//* Find user
 			const user = await login({ username, password });
+			//* Check  user
 			if (!user) {
 				return badRequest({
 					fieldErrors: { username: 'Invalid credentials' },
 					fields,
 				});
 			}
+			//* Create user session
+			return createUserSession(user.id, '/posts');
+		}
 		case 'register':
 			return register(username, password);
 		default:
@@ -53,7 +58,7 @@ export const action = async ({ request }) => {
 	}
 };
 
-function login() {
+function Login() {
 	const actionData = useActionData();
 
 	return (
@@ -124,4 +129,4 @@ function login() {
 	);
 }
 
-export default login;
+export default Login;
